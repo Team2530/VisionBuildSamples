@@ -6,6 +6,15 @@ import edu.wpi.cscore.*;
 import org.opencv.core.Mat;
 import org.opencv.imgproc.Imgproc;
 
+import edu.team2530.GripGearPipeline;
+
+import org.opencv.core.*;
+import org.opencv.core.Core.*;
+import org.opencv.features2d.FeatureDetector;
+import org.opencv.imgcodecs.Imgcodecs;
+import org.opencv.imgproc.*;
+import org.opencv.objdetect.*;
+
 public class Main {
   public static void main(String[] args) {
     // Loads our OpenCV library. This MUST be included
@@ -14,9 +23,10 @@ public class Main {
     // Connect NetworkTables, and get access to the publishing table
     NetworkTable.setClientMode();
     // Set your team number here
-    NetworkTable.setTeam(9999);
+    NetworkTable.setTeam(2530);
 
     NetworkTable.initialize();
+    NetworkTable gearMeasurements = NetworkTable.getTable("GearAutonomous");
 
 
     // This is the network port you want to stream the raw received image to
@@ -34,7 +44,6 @@ public class Main {
     // the input image so other devices can see it.
 
     // HTTP Camera
-    /*
     // This is our camera name from the robot. this can be set in your robot code with the following command
     // CameraServer.getInstance().startAutomaticCapture("YourCameraNameHere");
     // "USB Camera 0" is the default if no string is specified
@@ -47,7 +56,6 @@ public class Main {
       camera = new HttpCamera("CoprocessorCamera", "YourURLHere");
       inputStream.setSource(camera);
     }
-    */
     
       
 
@@ -77,7 +85,9 @@ public class Main {
     // All Mats and Lists should be stored outside the loop to avoid allocations
     // as they are expensive to create
     Mat inputImage = new Mat();
-    Mat hsv = new Mat();
+    GripGearPipeline pipeline = new GripGearPipeline();
+    ArrayList<MatOfPoint> contours;
+    int width = 320;
 
     // Infinitely process image
     while (true) {
@@ -86,14 +96,39 @@ public class Main {
       long frameTime = imageSink.grabFrame(inputImage);
       if (frameTime == 0) continue;
 
-      // Below is where you would do your OpenCV operations on the provided image
-      // The sample below just changes color source to HSV
-      Imgproc.cvtColor(inputImage, hsv, Imgproc.COLOR_BGR2HSV);
+      pipeline.process(inputImage);
+      contours = pipeline.filterContoursOutput();
+      int size = contours.size();
+      System.out.println(size);
+      double avgX = 0;
+      double avgArea = 0;
+      for (int i = 0; i < contours.size(); i++) {
+    	  final MatOfPoint contour = contours.get(i);
+    	  final Rect bb = Imgproc.boundingRect(contour);
+    	  final double centerX = bb.x + bb.width / 2;
+    	  final double centerY = bb.y + bb.height / 2;
+    	  final double area = Imgproc.contourArea(contour);
+    	  avgX += centerX;
+    	  avgArea += area;
+          //System.out.println(centerX);
+          //System.out.println(centerY);
+      }
+      avgX /= size;
+      avgArea /= size;
+      double pxPerIn = Math.sqrt(avgArea/10);
+      double dispPx = ((double)width/2) - avgX;
+      double dispIn = dispPx / pxPerIn;
+      double distanceIn = 1023.0/Math.sqrt(avgArea);
+      System.out.println(dispIn);
+      System.out.println(distanceIn);
+      gearMeasurements.putNumber("displacementIn", dispIn);
+      gearMeasurements.putNumber("distanceIn", distanceIn);
+      gearMeasurements.putNumber("targets", size);
 
       // Here is where you would write a processed image that you want to restreams
       // This will most likely be a marked up image of what the camera sees
       // For now, we are just going to stream the HSV image
-      imageSource.putFrame(hsv);
+      imageSource.putFrame(pipeline.hslThresholdOutput());
     }
   }
 

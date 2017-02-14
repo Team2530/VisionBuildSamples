@@ -20,7 +20,7 @@ int main() {
   // Connect NetworkTables, and get access to the publishing table
   NetworkTable::SetClientMode();
   // Set your team number here
-  NetworkTable::SetTeam(9999);
+  NetworkTable::SetTeam(2530);
 
   NetworkTable::Initialize();
 
@@ -38,7 +38,6 @@ int main() {
   // the input image so other devices can see it.
 
   // HTTP Camera
-  /*
   // This is our camera name from the robot. this can be set in your robot code with the following command
   // CameraServer.getInstance().startAutomaticCapture("YourCameraNameHere");
   // "USB Camera 0" is the default if no string is specified
@@ -50,7 +49,6 @@ int main() {
     camera = cs::HttpCamera{"CoprocessorCamera", "YourURLHere"};
     inputStream.SetSource(camera);
   }
-  */
   
 
 
@@ -129,7 +127,7 @@ cs::VideoCamera SetHttpCamera(llvm::StringRef cameraName, cs::MjpegServer& serve
   cs::HttpCamera camera("CoprocessorCamera", fixedUrls);
   server.SetSource(camera);
   return camera;
-} 
+}
 
 cs::UsbCamera SetUsbCamera(int cameraId, cs::MjpegServer& server) {
 #ifdef _WIN32
