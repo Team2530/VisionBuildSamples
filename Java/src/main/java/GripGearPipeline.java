@@ -41,9 +41,9 @@ public class GripGearPipeline {
 	public void process(Mat source0) {
 		// Step HSL_Threshold0:
 		Mat hslThresholdInput = source0;
-		double[] hslThresholdHue = {73.89830508474576, 99.78609625668449};
-		double[] hslThresholdSaturation = {238.2244921871123, 255.0};
-		double[] hslThresholdLuminance = {122.45762711864406, 255.0};
+		double[] hslThresholdHue = {67.1186440677966, 106.20320855614972};
+		double[] hslThresholdSaturation = {235.8233622436095, 255.0};
+		double[] hslThresholdLuminance = {28.813559322033896, 255.0};
 		hslThreshold(hslThresholdInput, hslThresholdHue, hslThresholdSaturation, hslThresholdLuminance, hslThresholdOutput);
 
 		// Step Find_Contours0:
